@@ -39,6 +39,7 @@ public class User {
     @Column(name = "role")
     private String role;
 
+    @Column(name = "status")
     private Status status;
 
     public User() {}
