@@ -10,6 +10,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/api/users")
 public class UserController {
@@ -31,7 +33,7 @@ public class UserController {
             User newUser = new User(body.getUsername(), body.getPassword(), body.getEmail(),
                     body.getFullName(), body.getRole());
             userService.save(newUser);
-
+            userService.saveUser(newUser);
             return ResponseEntity.status(HttpStatus.CREATED)
                     .body(new ResponseBody("User registered successfully", 0));
 
@@ -63,6 +65,7 @@ public class UserController {
     public ResponseEntity<String> authenticateUser(@RequestBody LoginRequestBody body) {
         User authenticatedUser = userService.authenticate(body.getUsername(), body.getPassword());
         if (authenticatedUser != null) {
+            userService.saveUser(authenticatedUser);
             return ResponseEntity.ok("User authenticated successfully");
         } else {
             boolean usernameExists = userService.existsByUsername(body.getUsername());
@@ -72,5 +75,16 @@ public class UserController {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Username does not exist");
             }
         }
+    }
+
+    @PostMapping("/disconnect")
+    public ResponseEntity<String> disconnect(@RequestParam int id) {
+        userService.disconnect(id);
+        return ResponseEntity.ok("User Disconnected");
+    }
+
+    @GetMapping("/online")
+    public ResponseEntity<List<User>> findConnectedUsers() {
+        return ResponseEntity.ok(userService.findConnectedUsers());
     }
 }

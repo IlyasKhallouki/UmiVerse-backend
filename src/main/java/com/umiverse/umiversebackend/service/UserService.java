@@ -1,10 +1,12 @@
 package com.umiverse.umiversebackend.service;
 
+import com.umiverse.umiversebackend.model.Status;
 import com.umiverse.umiversebackend.model.User;
 import com.umiverse.umiversebackend.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -32,6 +34,33 @@ public class UserService {
     public User authenticate(String username, String password) {
         String hashedPassword = User.hashPassword(password);
         return userRepository.findByUsernameAndPassword(username, hashedPassword);
+    }
+
+    public void saveUser(User user) {
+        user.setStatus(Status.ONLINE);
+        userRepository.save(user);
+    }
+
+    public void disconnect(User user) {
+        var storedUser = userRepository.findById(user.getUserID())
+                .orElse(null);
+        if (storedUser != null) {
+            storedUser.setStatus(Status.OFFLINE);
+            userRepository.save(storedUser);
+        }
+    }
+
+    public void disconnect(int id) {
+        var storedUser = userRepository.findById(id)
+                .orElse(null);
+        if (storedUser != null) {
+            storedUser.setStatus(Status.OFFLINE);
+            userRepository.save(storedUser);
+        }
+    }
+
+    public List<User> findConnectedUsers() {
+        return userRepository.findAllByStatus(Status.ONLINE);
     }
 
     public boolean checkEmail(String email) throws InvalidEmailException, AlreadyAvailableEmail {
