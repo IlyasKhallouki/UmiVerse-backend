@@ -1,6 +1,8 @@
 package com.umiverse.umiversebackend.controller;
 
-import com.umiverse.umiversebackend.body.LoginRequestBody;
+import com.umiverse.umiversebackend.body.*;
+import com.umiverse.umiversebackend.body.ResponseBody;
+import com.umiverse.umiversebackend.exception.*;
 import com.umiverse.umiversebackend.model.User;
 import com.umiverse.umiversebackend.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,19 +18,45 @@ public class UserController {
     private UserService userService;
 
     @PostMapping("/register")
-    public ResponseEntity<String> registerUser(@RequestBody User newUser) {
-        if (userService.existsByUsername(newUser.getUsername())) {
-            return ResponseEntity.status(HttpStatus.CONFLICT).body("Username already exists");
+    public ResponseEntity<ResponseBody> registerUser(@RequestBody RegisterRequestBody body) {
+        try {
+            userService.checkUsername(body.getUsername());
+            userService.checkEmail(body.getEmail());
+            userService.checkFullName(body.getFullName());
+            userService.checkRole(body.getRole());
+            userService.checkPassword(body.getPassword());
+
+            body.setPassword(User.hashPassword(body.getPassword()));
+
+            User newUser = new User(body.getUsername(), body.getPassword(), body.getEmail(),
+                    body.getFullName(), body.getRole());
+            userService.save(newUser);
+
+            return ResponseEntity.status(HttpStatus.CREATED)
+                    .body(new ResponseBody("User registered successfully", 0));
+
+        } catch (AlreadyAvailableUsername e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(new ResponseBody("Username already exists", 1001));
+        } catch (InvalidUsername e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(new ResponseBody("Invalid username", 1002));
+        } catch (InvalidPassword e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(new ResponseBody("Invalid password", 1003));
+        } catch (AlreadyAvailableEmail e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(new ResponseBody("Email already exists", 1004));
+        } catch (InvalidEmailException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(new ResponseBody("Invalid email", 1005));
+        } catch (InvalidFullName e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(new ResponseBody("Invalid full name", 1006));
+        } catch (InvalidRole e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(new ResponseBody("Invalid role", 1007));
         }
-        if (userService.existsByEmail(newUser.getEmail())) {
-            return ResponseEntity.status(HttpStatus.CONFLICT).body("Email already exists");
-        }
-
-        newUser.setPassword(User.hashPassword(newUser.getPassword()));
-
-        userService.save(newUser);
-
-        return ResponseEntity.status(HttpStatus.CREATED).body("User registered successfully");
     }
 
     @PostMapping("/login")
@@ -37,7 +65,12 @@ public class UserController {
         if (authenticatedUser != null) {
             return ResponseEntity.ok("User authenticated successfully");
         } else {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid username or password");
+            boolean usernameExists = userService.existsByUsername(body.getUsername());
+            if (usernameExists) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Incorrect password");
+            } else {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Username does not exist");
+            }
         }
     }
 }
