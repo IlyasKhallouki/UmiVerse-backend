@@ -1,5 +1,6 @@
 package com.umiverse.umiversebackend.controller;
 
+import com.umiverse.umiversebackend.body.LoginRequestBody;
 import com.umiverse.umiversebackend.model.User;
 import com.umiverse.umiversebackend.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,8 +32,8 @@ public class UserController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<String> authenticateUser(@RequestParam String username, @RequestParam String password) {
-        User authenticatedUser = userService.authenticate(username, password);
+    public ResponseEntity<String> authenticateUser(@RequestBody LoginRequestBody body) {
+        User authenticatedUser = userService.authenticate(body.getUsername(), body.getPassword());
         if (authenticatedUser != null) {
             return ResponseEntity.ok("User authenticated successfully");
         } else {
