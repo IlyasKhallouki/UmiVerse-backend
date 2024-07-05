@@ -5,19 +5,16 @@ spring:
     url: jdbc:mysql://localhost:3306/universe
     username: root
     password: password
-    driver-class-name: com.mysql.cj.jdbc.Driver
   jpa:
     properties:
       hibernate:
-        dialect: org.hibernate.dialect.MySQLDialect
     hibernate:
       ddl-auto: update
   data:
     mongodb:
-      username: root
-      password: password
-      port: 28017
+      host: localhost
+      port: 27017
       database: chat
-      authentication-database: admin
+
 server:
   port: 8080
