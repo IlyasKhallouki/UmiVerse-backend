@@ -1,5 +1,10 @@
 package com.umiverse.umiversebackend.body;
 
+import lombok.Getter;
+import lombok.Setter;
+
+@Getter
+@Setter
 public class RegisterRequestBody {
     String username;
     String fullName;
@@ -8,28 +13,4 @@ public class RegisterRequestBody {
     String role;
 
     public RegisterRequestBody(){}
-
-    public void setPassword(String password) {
-        this.password = password;
-    }
-
-    public String getPassword() {
-        return password;
-    }
-
-    public String getUsername() {
-        return username;
-    }
-
-    public String getEmail() {
-        return email;
-    }
-
-    public String getFullName() {
-        return fullName;
-    }
-
-    public String getRole() {
-        return role;
-    }
 }

@@ -1,12 +1,16 @@
 package com.umiverse.umiversebackend.model;
 
 import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.Setter;
 
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.sql.Date;
 import java.util.Objects;
 
+@Setter
+@Getter
 @Entity
 @Table(name = "users")
 public class User {
@@ -44,66 +48,6 @@ public class User {
         this.bio = ":)";
         this.role = role;
         this.registrationDate = getCurrentDate();
-    }
-
-    public int getId() {
-        return userID;
-    }
-
-    public String getUsername() {
-        return username;
-    }
-
-    public String getEmail() {
-        return email;
-    }
-
-    public String getPassword() {
-        return password;
-    }
-
-    public String getFullName() {
-        return fullName;
-    }
-
-    public String getBio() {
-        return bio;
-    }
-
-    public Date getRegistrationDate() {
-        return registrationDate;
-    }
-
-    public String getRole() {
-        return role;
-    }
-
-    public void setUsername(String username) {
-        this.username = username;
-    }
-
-    public void setEmail(String email) {
-        this.email = email;
-    }
-
-    public void setPassword(String password) {
-        this.password = password;
-    }
-
-    public void setFullName(String fullName) {
-        this.fullName = fullName;
-    }
-
-    public void setBio(String bio) {
-        this.bio = bio;
-    }
-
-    public void setRegistrationDate(Date registrationDate) {
-        this.registrationDate = registrationDate;
-    }
-
-    public void setRole(String role) {
-        this.role = role;
     }
 
     @Override
