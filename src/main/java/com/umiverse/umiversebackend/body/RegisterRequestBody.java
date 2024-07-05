@@ -7,6 +7,8 @@ public class RegisterRequestBody {
     String password;
     String role;
 
+    public RegisterRequestBody(){}
+
     public void setPassword(String password) {
         this.password = password;
     }
