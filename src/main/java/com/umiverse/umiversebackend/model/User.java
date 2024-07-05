@@ -35,8 +35,11 @@ public class User {
 
     @Column(name = "registration_date")
     private Date registrationDate;
+
     @Column(name = "role")
     private String role;
+
+    private Status status;
 
     public User() {}
 
