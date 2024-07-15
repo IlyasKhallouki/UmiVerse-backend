@@ -1,7 +1,7 @@
 package com.umiverse.umiversebackend.service;
 
 import com.umiverse.umiversebackend.model.ChatMessage;
-import com.umiverse.umiversebackend.repository.ChatMessageRepository;
+import com.umiverse.umiversebackend.repository.mongodb.ChatMessageRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 

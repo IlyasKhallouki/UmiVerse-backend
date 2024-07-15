@@ -11,7 +11,7 @@ import java.util.Date;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-@Document
+@Document(collection = "xyz")
 public class ChatMessage {
     @Id
     private String id;
@@ -19,5 +19,5 @@ public class ChatMessage {
     private String recipientId;
     private String chatId;
     private String content;
-    private Date timestamp;
 }
+

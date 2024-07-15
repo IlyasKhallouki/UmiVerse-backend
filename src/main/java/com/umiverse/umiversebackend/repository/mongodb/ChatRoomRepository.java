@@ -1,4 +1,4 @@
-package com.umiverse.umiversebackend.repository;
+package com.umiverse.umiversebackend.repository.mongodb;
 
 import com.umiverse.umiversebackend.chatroom.ChatRoom;
 import org.springframework.data.mongodb.repository.MongoRepository;

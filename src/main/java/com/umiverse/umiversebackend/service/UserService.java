@@ -2,12 +2,11 @@ package com.umiverse.umiversebackend.service;
 
 import com.umiverse.umiversebackend.model.Status;
 import com.umiverse.umiversebackend.model.User;
-import com.umiverse.umiversebackend.repository.UserRepository;
+import com.umiverse.umiversebackend.repository.mysql.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 

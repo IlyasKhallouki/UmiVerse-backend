@@ -1,12 +1,11 @@
 package com.umiverse.umiversebackend.service;
 
 import com.umiverse.umiversebackend.chatroom.ChatRoom;
-import com.umiverse.umiversebackend.repository.ChatRoomRepository;
+import com.umiverse.umiversebackend.repository.mongodb.ChatRoomRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.nio.charset.StandardCharsets;
-import java.nio.file.attribute.UserPrincipalNotFoundException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Optional;
@@ -23,7 +22,7 @@ public class ChatRoomService {
             boolean createNewRoomIfNotExists
     ){
         return chatRoomRepository.findBySenderIdAndRecipientId(senderID, recipientID)
-                .map(ChatRoom::getChatID)
+                .map(ChatRoom::getChatId)
                 .or(() -> {
                     if (createNewRoomIfNotExists) {
                         try {
@@ -50,15 +49,15 @@ public class ChatRoomService {
         String chatID = hexString.toString();
 
         ChatRoom senderRecipient = ChatRoom.builder()
-                .chatID(chatID)
-                .senderID(str1)
-                .recipientID(str2)
+                .chatId(chatID)
+                .senderId(str1)
+                .recipientId(str2)
                 .build();
 
         ChatRoom recipientSender = ChatRoom.builder()
-                .chatID(chatID)
-                .senderID(str2)
-                .recipientID(str1)
+                .chatId(chatID)
+                .senderId(str2)
+                .recipientId(str1)
                 .build();
 
         chatRoomRepository.save(senderRecipient);

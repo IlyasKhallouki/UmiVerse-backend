@@ -15,20 +15,50 @@ let fullname = null;
 let selectedUserId = null;
 
 function connect(event) {
-    nickname = document.querySelector('#nickname').value.trim();
-    fullname = document.querySelector('#fullname').value.trim();
+    const username = document.querySelector('#username').value.trim();
+    const password = document.querySelector('#password').value.trim();
 
     if (nickname && fullname) {
-        usernamePage.classList.add('hidden');
-        chatPage.classList.remove('hidden');
+        const loginData = {
+            username: username,
+            password: password
+        };
 
-        const socket = new SockJS('/ws');
-        stompClient = Stomp.over(socket);
+        // Send login request to server
+        fetch('/login', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(loginData)
+        })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Login failed');
+                }
+                return response.json();
+            })
+            .then(data => {
+                // Hide login form and show chat page
+                document.getElementById('usernamePage').classList.add('hidden');
+                document.getElementById('chatPage').classList.remove('hidden');
 
-        stompClient.connect({}, onConnected, onError);
+                // Connect WebSocket
+                const socket = new SockJS('/ws');
+                stompClient = Stomp.over(socket);
+
+                stompClient.connect({}, onConnected, onError);
+            })
+            .catch(error => {
+                console.error('Login error:', error);
+                // Handle login error (e.g., display error message)
+            });
     }
     event.preventDefault();
 }
+
+document.getElementById('loginForm').addEventListener('submit', connect);
+
 
 
 function onConnected() {

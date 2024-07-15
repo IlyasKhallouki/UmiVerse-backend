@@ -1,4 +1,4 @@
-package com.umiverse.umiversebackend.repository;
+package com.umiverse.umiversebackend.repository.mysql;
 
 import com.umiverse.umiversebackend.model.Status;
 import com.umiverse.umiversebackend.model.User;
