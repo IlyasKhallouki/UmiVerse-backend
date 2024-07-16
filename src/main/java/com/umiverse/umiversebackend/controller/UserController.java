@@ -62,11 +62,11 @@ public class UserController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<String> authenticateUser(@RequestBody LoginRequestBody body) {
+    public ResponseEntity<Object> authenticateUser(@RequestBody LoginRequestBody body) {
         User authenticatedUser = userService.authenticate(body.getUsername(), body.getPassword());
         if (authenticatedUser != null) {
             userService.saveUser(authenticatedUser);
-            return ResponseEntity.ok("User authenticated successfully");
+            return ResponseEntity.ok(new ResponseBody("User authenticated successfully", authenticatedUser.getUserID()));
         } else {
             boolean usernameExists = userService.existsByUsername(body.getUsername());
             if (usernameExists) {

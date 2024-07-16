@@ -41,8 +41,7 @@ public class UserService {
     }
 
     public void disconnect(User user) {
-        var storedUser = userRepository.findById(user.getUserID())
-                .orElse(null);
+        User storedUser = userRepository.findByUserID(user.getUserID());
         if (storedUser != null) {
             storedUser.setStatus(Status.OFFLINE);
             userRepository.save(storedUser);
@@ -50,8 +49,7 @@ public class UserService {
     }
 
     public void disconnect(int id) {
-        var storedUser = userRepository.findById(id)
-                .orElse(null);
+        User storedUser = userRepository.findByUserID(id);
         if (storedUser != null) {
             storedUser.setStatus(Status.OFFLINE);
             userRepository.save(storedUser);
