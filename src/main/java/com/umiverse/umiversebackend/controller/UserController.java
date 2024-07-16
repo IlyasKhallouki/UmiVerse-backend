@@ -1,6 +1,8 @@
 package com.umiverse.umiversebackend.controller;
 
-import com.umiverse.umiversebackend.body.*;
+import com.umiverse.umiversebackend.body.DetailsResponseEntity;
+import com.umiverse.umiversebackend.body.LoginRequestBody;
+import com.umiverse.umiversebackend.body.RegisterRequestBody;
 import com.umiverse.umiversebackend.body.ResponseBody;
 import com.umiverse.umiversebackend.exception.*;
 import com.umiverse.umiversebackend.model.User;
@@ -24,18 +26,17 @@ public class UserController {
         try {
             userService.checkUsername(body.getUsername());
             userService.checkEmail(body.getEmail());
-            userService.checkFullName(body.getFullName());
+            userService.checkFullName(body.getFullname());
             userService.checkRole(body.getRole());
             userService.checkPassword(body.getPassword());
 
             body.setPassword(User.hashPassword(body.getPassword()));
 
             User newUser = new User(body.getUsername(), body.getPassword(), body.getEmail(),
-                    body.getFullName(), body.getRole());
-            userService.save(newUser);
+                    body.getFullname(), body.getRole());
             userService.saveUser(newUser);
             return ResponseEntity.status(HttpStatus.CREATED)
-                    .body(new ResponseBody("User registered successfully", 0));
+                    .body(new ResponseBody("User registered successfully", newUser.getUserID()));
 
         } catch (AlreadyAvailableUsername e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
@@ -86,5 +87,16 @@ public class UserController {
     @GetMapping("/online")
     public ResponseEntity<List<User>> findConnectedUsers() {
         return ResponseEntity.ok(userService.findConnectedUsers());
+    }
+
+    @GetMapping("/details")
+    public ResponseEntity<Object> getUserDetails(@RequestParam int id) {
+        User user = userService.getUserById(id);
+        if(user != null){
+             return ResponseEntity.status(HttpStatus.FOUND).body(
+                     new DetailsResponseEntity(user.getUserID(), user.getUsername(), user.getEmail(), user.getFullName(), user.getBio())
+             );
+        }
+        else return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ResponseBody("User not found", 0001));
     }
 }
