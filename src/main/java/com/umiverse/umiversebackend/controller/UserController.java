@@ -93,7 +93,7 @@ public class UserController {
     public ResponseEntity<Object> getUserDetails(@RequestParam int id) {
         User user = userService.getUserById(id);
         if(user != null){
-             return ResponseEntity.status(HttpStatus.FOUND).body(
+             return ResponseEntity.ok().body(
                      new DetailsResponseEntity(user.getUserID(), user.getUsername(), user.getEmail(), user.getFullName(), user.getBio())
              );
         }
