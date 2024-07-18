@@ -6,6 +6,7 @@ import com.umiverse.umiversebackend.model.User;
 import com.umiverse.umiversebackend.repository.mysql.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.messaging.simp.SimpMessageSendingOperations;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -19,7 +20,8 @@ public class UserService {
 
     @Autowired
     private UserRepository userRepository;
-    private SimpMessageSendingOperations messagingTemplate;
+    @Autowired
+    private SimpMessagingTemplate messagingTemplate;
 
     public void save(User user) {
         userRepository.save(user);
@@ -68,6 +70,7 @@ public class UserService {
         if (storedUser != null) {
             storedUser.setStatus(Status.OFFLINE);
             userRepository.save(storedUser);
+            messagingTemplate.convertAndSend("/topic/online", new UserStatusMessage(storedUser.getUserID(), false));
         }
     }
 
