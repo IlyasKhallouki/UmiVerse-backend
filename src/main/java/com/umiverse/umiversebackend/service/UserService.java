@@ -1,9 +1,11 @@
 package com.umiverse.umiversebackend.service;
 
+import com.umiverse.umiversebackend.body.UserStatusMessage;
 import com.umiverse.umiversebackend.model.Status;
 import com.umiverse.umiversebackend.model.User;
 import com.umiverse.umiversebackend.repository.mysql.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.messaging.simp.SimpMessageSendingOperations;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -17,6 +19,7 @@ public class UserService {
 
     @Autowired
     private UserRepository userRepository;
+    private SimpMessageSendingOperations messagingTemplate;
 
     public void save(User user) {
         userRepository.save(user);
@@ -39,12 +42,16 @@ public class UserService {
 
     public User authenticate(String username, String password) {
         String hashedPassword = User.hashPassword(password);
-        return userRepository.findByUsernameAndPassword(username, hashedPassword);
+        User user = userRepository.findByUsernameAndPassword(username, hashedPassword);
+
+        if(user != null) messagingTemplate.convertAndSend("/topic/online", new UserStatusMessage(user.getUserID(), true));
+        return user;
     }
 
     public void saveUser(User user) {
         user.setStatus(Status.ONLINE);
         userRepository.save(user);
+        messagingTemplate.convertAndSend("/topic/online", new UserStatusMessage(user.getUserID(), true));
     }
 
     public void disconnect(User user) {
@@ -52,6 +59,7 @@ public class UserService {
         if (storedUser != null) {
             storedUser.setStatus(Status.OFFLINE);
             userRepository.save(storedUser);
+            messagingTemplate.convertAndSend("/topic/online", new UserStatusMessage(storedUser.getUserID(), false));
         }
     }
 
