@@ -71,9 +71,11 @@ public class UserController {
         } else {
             boolean usernameExists = userService.existsByUsername(body.getUsername());
             if (usernameExists) {
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Incorrect password");
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body(new ResponseBody("Invalid Password", 2));
             } else {
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Username does not exist");
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body(new ResponseBody("Invalid Username", 1));
             }
         }
     }

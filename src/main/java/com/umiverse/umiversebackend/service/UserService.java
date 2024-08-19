@@ -21,7 +21,7 @@ public class UserService {
     @Autowired
     private UserRepository userRepository;
     @Autowired
-    private SimpMessagingTemplate messagingTemplate;
+    private SimpMessageSendingOperations messagingTemplate;
 
     public void save(User user) {
         userRepository.save(user);
@@ -43,6 +43,7 @@ public class UserService {
     }
 
     public User authenticate(String username, String password) {
+        messagingTemplate.convertAndSend("/topic/users/updates", "User logged in");
         String hashedPassword = User.hashPassword(password);
         User user = userRepository.findByUsernameAndPassword(username, hashedPassword);
 
@@ -66,6 +67,7 @@ public class UserService {
     }
 
     public void disconnect(int id) {
+        messagingTemplate.convertAndSend("/topic/users/updates", "User logged out");
         User storedUser = userRepository.findByUserID(id);
         if (storedUser != null) {
             storedUser.setStatus(Status.OFFLINE);
