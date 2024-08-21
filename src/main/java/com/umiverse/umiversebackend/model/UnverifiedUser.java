@@ -48,7 +48,7 @@ public class UnverifiedUser {
 
     public UnverifiedUser() {}
 
-    public UnverifiedUser(String username, String password, String email, String fullName, String role, Timestamp tokenExpirationDate){
+    public UnverifiedUser(String username, String password, String email, String fullName, String role){
         this.username = username;
         this.password = password;
         this.email = email;
@@ -56,7 +56,7 @@ public class UnverifiedUser {
         this.bio = ":)";
         this.role = role;
         this.registrationDate = getCurrentDate();
-        this.tokenExpirationDate = null; // I don't know how to make it valid for 30 mins after registration
+        this.tokenExpirationDate = calculateTokenExpiryDate();
         this.verificationToken = generateVerificationToken(); //
     }
 
