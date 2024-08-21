@@ -23,61 +23,12 @@ public class UserController {
 
     @PostMapping("/register")
     public ResponseEntity<ResponseBody> registerUser(@RequestBody RegisterRequestBody body) {
-        try {
-            userService.checkUsername(body.getUsername());
-            userService.checkEmail(body.getEmail());
-            userService.checkFullName(body.getFullname());
-            userService.checkRole(body.getRole());
-            userService.checkPassword(body.getPassword());
-
-            body.setPassword(User.hashPassword(body.getPassword()));
-
-            User newUser = new User(body.getUsername(), body.getPassword(), body.getEmail(),
-                    body.getFullname(), body.getRole());
-            userService.saveUser(newUser);
-            return ResponseEntity.status(HttpStatus.CREATED)
-                    .body(new ResponseBody("User registered successfully", newUser.getUserID()));
-
-        } catch (AlreadyAvailableUsername e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(new ResponseBody("Username already exists", 1001));
-        } catch (InvalidUsername e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(new ResponseBody("Invalid username", 1002));
-        } catch (InvalidPassword e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(new ResponseBody("Invalid password", 1003));
-        } catch (AlreadyAvailableEmail e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(new ResponseBody("Email already exists", 1004));
-        } catch (InvalidEmailException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(new ResponseBody("Invalid email", 1005));
-        } catch (InvalidFullName e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(new ResponseBody("Invalid full name", 1006));
-        } catch (InvalidRole e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(new ResponseBody("Invalid role", 1007));
-        }
+        return userService.register(body);
     }
 
     @PostMapping("/login")
-    public ResponseEntity<Object> authenticateUser(@RequestBody LoginRequestBody body) {
-        User authenticatedUser = userService.authenticate(body.getUsername(), body.getPassword());
-        if (authenticatedUser != null) {
-            userService.saveUser(authenticatedUser);
-            return ResponseEntity.ok(new ResponseBody("User authenticated successfully", authenticatedUser.getUserID()));
-        } else {
-            boolean usernameExists = userService.existsByUsername(body.getUsername());
-            if (usernameExists) {
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                        .body(new ResponseBody("Invalid Password", 2));
-            } else {
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                        .body(new ResponseBody("Invalid Username", 1));
-            }
-        }
+    public ResponseEntity<ResponseBody> authenticateUser(@RequestBody LoginRequestBody body) {
+        return userService.authenticate(body.getUsername(), body.getPassword());
     }
 
     @PostMapping("/disconnect")

@@ -1,10 +1,14 @@
 package com.umiverse.umiversebackend.service;
 
+import com.umiverse.umiversebackend.body.RegisterRequestBody;
+import com.umiverse.umiversebackend.body.ResponseBody;
 import com.umiverse.umiversebackend.body.UserStatusMessage;
-import com.umiverse.umiversebackend.model.Status;
-import com.umiverse.umiversebackend.model.User;
+import com.umiverse.umiversebackend.model.*;
+import com.umiverse.umiversebackend.repository.mysql.UnverifiedUserRepository;
 import com.umiverse.umiversebackend.repository.mysql.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.simp.SimpMessageSendingOperations;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
@@ -21,10 +25,48 @@ public class UserService {
     @Autowired
     private UserRepository userRepository;
     @Autowired
+    private UnverifiedUserRepository unverifiedUserRepository;
+    @Autowired
     private SimpMessageSendingOperations messagingTemplate;
 
-    public void save(User user) {
-        userRepository.save(user);
+    public ResponseEntity<ResponseBody> register(RegisterRequestBody body){
+        try {
+            this.checkUsername(body.getUsername());
+            this.checkEmail(body.getEmail());
+            this.checkFullName(body.getFullname());
+            this.checkRole(body.getRole());
+            this.checkPassword(body.getPassword());
+
+            body.setPassword(User.hashPassword(body.getPassword()));
+
+            UnverifiedUser newUser = new UnverifiedUser(body.getUsername(), body.getPassword(), body.getEmail(),
+                    body.getFullname(), body.getRole());
+            this.saveUnverifiedUser(newUser);
+            return ResponseEntity.status(HttpStatus.CREATED)
+                    .body(new ResponseBody("Unverified user registered, verification token sent", newUser.getUserID()));
+
+        } catch (AlreadyAvailableUsername e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(new ResponseBody("Username already exists", 1001));
+        } catch (InvalidUsername e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(new ResponseBody("Invalid username", 1002));
+        } catch (InvalidPassword e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(new ResponseBody("Invalid password", 1003));
+        } catch (AlreadyAvailableEmail e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(new ResponseBody("Email already exists", 1004));
+        } catch (InvalidEmailException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(new ResponseBody("Invalid email", 1005));
+        } catch (InvalidFullName e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(new ResponseBody("Invalid full name", 1006));
+        } catch (InvalidRole e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(new ResponseBody("Invalid role", 1007));
+        }
     }
 
     public User getUserById(int id) {
@@ -38,17 +80,27 @@ public class UserService {
         return userRepository.existsByUsername(username);
     }
 
-    public boolean existsByEmail(String email) {
-        return userRepository.existsByEmail(email);
-    }
-
-    public User authenticate(String username, String password) {
-        messagingTemplate.convertAndSend("/topic/users/updates", "User logged in");
+    public ResponseEntity<ResponseBody> authenticate(String username, String password) {
         String hashedPassword = User.hashPassword(password);
         User user = userRepository.findByUsernameAndPassword(username, hashedPassword);
 
-        if(user != null) messagingTemplate.convertAndSend("/topic/online", new UserStatusMessage(user.getUserID(), true));
-        return user;
+        // TODO: Set up login updates
+//        messagingTemplate.convertAndSend("/topic/users/updates", "User logged in");
+//        if(user != null) messagingTemplate.convertAndSend("/topic/online", new UserStatusMessage(user.getUserID(), true));
+
+        if (user != null) {
+            saveUser(user);
+            return ResponseEntity.ok(new ResponseBody("User authenticated successfully", user.getUserID()));
+        } else {
+            boolean usernameExists = existsByUsername(username);
+            if (usernameExists) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body(new ResponseBody("Invalid Password", 2));
+            } else {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body(new ResponseBody("Invalid Username", 1));
+            }
+        }
     }
 
     public void saveUser(User user) {
@@ -56,6 +108,10 @@ public class UserService {
         userRepository.save(user);
         messagingTemplate.convertAndSend("/topic/online", new UserStatusMessage(user.getUserID(), true));
     }
+
+    public void saveUnverifiedUser(UnverifiedUser user) {
+        unverifiedUserRepository.save(user);
+     }
 
     public void disconnect(User user) {
         User storedUser = userRepository.findByUserID(user.getUserID());
