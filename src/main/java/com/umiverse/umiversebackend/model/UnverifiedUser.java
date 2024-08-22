@@ -16,7 +16,7 @@ import java.util.UUID;
 public class UnverifiedUser {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private int userID;
+    private int id;
 
     @Column(name = "username")
     private String username;

@@ -15,23 +15,28 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @Controller
-@RequestMapping("/api/users")
+@RequestMapping("/api")
 public class UserController {
 
     @Autowired
     private UserService userService;
 
-    @PostMapping("/register")
+    @PostMapping("/auth/register")
     public ResponseEntity<ResponseBody> registerUser(@RequestBody RegisterRequestBody body) {
         return userService.register(body);
     }
 
-    @PostMapping("/login")
+    @PostMapping("/auth/verify-user")
+    public ResponseEntity<ResponseBody> verifyUser(@RequestParam String token){
+        return userService.verifyUser(token);
+    }
+
+    @PostMapping("/auth/login")
     public ResponseEntity<ResponseBody> authenticateUser(@RequestBody LoginRequestBody body) {
         return userService.authenticate(body.getUsername(), body.getPassword());
     }
 
-    @PostMapping("/disconnect")
+    @PostMapping("/auth/disconnect")
     public ResponseEntity<String> disconnect(@RequestParam int id) {
         userService.disconnect(id);
         return ResponseEntity.ok("User Disconnected");

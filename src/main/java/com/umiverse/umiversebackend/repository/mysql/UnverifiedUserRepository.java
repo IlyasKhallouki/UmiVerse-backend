@@ -9,6 +9,5 @@ import java.util.List;
 
 @Repository
 public interface UnverifiedUserRepository extends JpaRepository<UnverifiedUser, Integer> {
-
-
+    UnverifiedUser findUnverifiedUsersByVerificationToken(String verificationCode);
 }

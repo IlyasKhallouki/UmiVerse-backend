@@ -13,6 +13,7 @@ import org.springframework.messaging.simp.SimpMessageSendingOperations;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
+import java.sql.Timestamp;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -26,6 +27,8 @@ public class UserService {
     private UserRepository userRepository;
     @Autowired
     private UnverifiedUserRepository unverifiedUserRepository;
+    @Autowired
+    private EmailService emailService;
     @Autowired
     private SimpMessageSendingOperations messagingTemplate;
 
@@ -42,8 +45,9 @@ public class UserService {
             UnverifiedUser newUser = new UnverifiedUser(body.getUsername(), body.getPassword(), body.getEmail(),
                     body.getFullname(), body.getRole());
             this.saveUnverifiedUser(newUser);
+            emailService.sendVerificationEmail(newUser.getEmail(), newUser.getVerificationToken());
             return ResponseEntity.status(HttpStatus.CREATED)
-                    .body(new ResponseBody("Unverified user registered, verification token sent", newUser.getUserID()));
+                    .body(new ResponseBody("Unverified user registered, verification token sent", newUser.getId()));
 
         } catch (AlreadyAvailableUsername e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
@@ -66,7 +70,53 @@ public class UserService {
         } catch (InvalidRole e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body(new ResponseBody("Invalid role", 1007));
+        } catch (Exception e){
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(
+                    new ResponseBody(e.getMessage(), 9999)
+            );
         }
+    }
+
+    public ResponseEntity<ResponseBody> verifyUser(String token){
+        try {
+            UnverifiedUser user = unverifiedUserRepository.findUnverifiedUsersByVerificationToken(token);
+            if (user == null) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(
+                        new ResponseBody("Invalid verification token", 1008)
+                );
+            }
+
+            Timestamp expirationDate = user.getTokenExpirationDate();
+
+            if (hasTimestampPassed(expirationDate)) {
+                return ResponseEntity.status(HttpStatus.GONE).body(
+                        new ResponseBody("Expired verification token", 1009)
+                );
+            }
+
+            User newUser = new User(
+                    user.getUsername(),
+                    user.getPassword(),
+                    user.getEmail(),
+                    user.getFullName(),
+                    user.getRole()
+            );
+
+            userRepository.save(newUser);
+
+            return ResponseEntity.status(HttpStatus.ACCEPTED).body(
+                    new ResponseBody("User registered successfully", newUser.getUserID())
+            );
+        } catch (Exception e){
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(
+                    new ResponseBody(e.getMessage(), 9999)
+            );
+        }
+    }
+
+    public static boolean hasTimestampPassed(Timestamp timestamp) {
+        Timestamp currentTimestamp = new Timestamp(System.currentTimeMillis());
+        return timestamp.before(currentTimestamp);
     }
 
     public User getUserById(int id) {
@@ -81,25 +131,31 @@ public class UserService {
     }
 
     public ResponseEntity<ResponseBody> authenticate(String username, String password) {
-        String hashedPassword = User.hashPassword(password);
-        User user = userRepository.findByUsernameAndPassword(username, hashedPassword);
+        try {
+            String hashedPassword = User.hashPassword(password);
+            User user = userRepository.findByUsernameAndPassword(username, hashedPassword);
 
-        // TODO: Set up login updates
+            // TODO: Set up login updates
 //        messagingTemplate.convertAndSend("/topic/users/updates", "User logged in");
 //        if(user != null) messagingTemplate.convertAndSend("/topic/online", new UserStatusMessage(user.getUserID(), true));
 
-        if (user != null) {
-            saveUser(user);
-            return ResponseEntity.ok(new ResponseBody("User authenticated successfully", user.getUserID()));
-        } else {
-            boolean usernameExists = existsByUsername(username);
-            if (usernameExists) {
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                        .body(new ResponseBody("Invalid Password", 2));
+            if (user != null) {
+                saveUser(user);
+                return ResponseEntity.ok(new ResponseBody("User authenticated successfully", user.getUserID()));
             } else {
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                        .body(new ResponseBody("Invalid Username", 1));
+                boolean usernameExists = existsByUsername(username);
+                if (usernameExists) {
+                    return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                            .body(new ResponseBody("Invalid Password", 2));
+                } else {
+                    return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                            .body(new ResponseBody("Invalid Username", 1));
+                }
             }
+        } catch (Exception e){
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(
+                    new ResponseBody(e.getMessage(), 9999)
+            );
         }
     }
 
@@ -210,3 +266,6 @@ public class UserService {
         return true;
     }
 }
+
+
+//curl -X POST http://localhost:8080/api/users/register \ -H "Content-Type: application/json" \ -d '{ "username": "testuser","password": "Eliaskhal0","email": "testuser@edu.umi.ac.ma","fullName": "Test User", "role": "student"}'
