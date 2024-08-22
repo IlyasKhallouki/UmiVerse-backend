@@ -104,7 +104,7 @@ public class UserService {
 
             userRepository.save(newUser);
 
-            return ResponseEntity.status(HttpStatus.ACCEPTED).body(
+            return ResponseEntity.ok(
                     new ResponseBody("User registered successfully", newUser.getUserID())
             );
         } catch (Exception e){
@@ -166,6 +166,15 @@ public class UserService {
     }
 
     public void saveUnverifiedUser(UnverifiedUser user) {
+        if(unverifiedUserRepository.existsByUsername(user.getUsername())){
+            unverifiedUserRepository.delete(
+                    unverifiedUserRepository.getUnverifiedUserByUsername(user.getUsername())
+            );
+        } else if(unverifiedUserRepository.existsByEmail(user.getEmail())){
+            unverifiedUserRepository.delete(
+                    unverifiedUserRepository.getUnverifiedUserByEmail(user.getEmail())
+            );
+        }
         unverifiedUserRepository.save(user);
      }
 

@@ -57,7 +57,7 @@ public class UnverifiedUser {
         this.role = role;
         this.registrationDate = getCurrentDate();
         this.tokenExpirationDate = calculateTokenExpiryDate();
-        this.verificationToken = generateVerificationToken(); //
+        this.verificationToken = generateVerificationToken();
     }
 
     // get the current date when registering
@@ -76,7 +76,9 @@ public class UnverifiedUser {
 
     // generate a unique verification token
     public static String generateVerificationToken() {
-        return UUID.randomUUID().toString();
+        String token = UUID.randomUUID().toString();
+        System.out.println(token);
+        return token;
     }
 }
 
