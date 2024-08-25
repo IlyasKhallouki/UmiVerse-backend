@@ -54,4 +54,14 @@ public class UserController {
     public ResponseEntity<Object> getUserDetails(@RequestParam String token, @RequestParam int id) {
         return userService.getUserDetails(token, id);
     }
+
+    @PostMapping("/on")
+    public ResponseEntity<String> setUserOnline(String token){
+        return userService.setUserOnline(token);
+    }
+
+    @PostMapping("/off")
+    public ResponseEntity<String> setUserOffline(String token){
+        return userService.setUserOffline(token);
+    }
 }

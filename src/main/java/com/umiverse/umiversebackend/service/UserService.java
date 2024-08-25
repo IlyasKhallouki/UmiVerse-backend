@@ -182,6 +182,27 @@ public class UserService {
         }
     }
 
+    public ResponseEntity<String> setUserOnline(String token){
+        if (userRepository.existsBySessionToken(token)) {
+            User user = userRepository.findBySessionToken(token);
+            user.setStatus(Status.ONLINE);
+            userRepository.save(user);
+            return ResponseEntity.ok("User status set to online");
+        } else return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                .body("Invalid user token");
+    }
+
+    public ResponseEntity<String> setUserOffline(String token){
+        if (userRepository.existsBySessionToken(token)) {
+            User user = userRepository.findBySessionToken(token);
+            user.setStatus(Status.OFFLINE);
+            userRepository.save(user);
+            return ResponseEntity.ok("User status set to online");
+        } else return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                .body("Invalid user token");
+    }
+
+
     public ResponseEntity<Object> findConnectedUsers(String token) {
         if (userRepository.existsBySessionToken(token)) {
             return ResponseEntity.ok(userRepository.findAllByStatus(Status.ONLINE));
