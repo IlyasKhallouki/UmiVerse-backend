@@ -4,6 +4,7 @@ import com.umiverse.umiversebackend.body.*;
 import com.umiverse.umiversebackend.body.ResponseBody;
 import com.umiverse.umiversebackend.exception.*;
 import com.umiverse.umiversebackend.model.User;
+import com.umiverse.umiversebackend.repository.mysql.UserRepository;
 import com.umiverse.umiversebackend.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -20,6 +21,8 @@ public class UserController {
 
     @Autowired
     private UserService userService;
+    @Autowired
+    private UserRepository userRepository;
 
     @PostMapping("/auth/register")
     public ResponseEntity<ResponseBody> registerUser(@RequestBody RegisterRequestBody body) {
@@ -48,13 +51,7 @@ public class UserController {
     }
 
     @GetMapping("/details")
-    public ResponseEntity<Object> getUserDetails(@RequestParam int id) {
-        User user = userService.getUserById(id);
-        if(user != null){
-             return ResponseEntity.ok().body(
-                     new DetailsResponseEntity(user.getUserID(), user.getUsername(), user.getEmail(), user.getFullName(), user.getBio())
-             );
-        }
-        else return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ResponseBody("User not found", 0001));
+    public ResponseEntity<Object> getUserDetails(@RequestParam String token, @RequestParam int id) {
+        return userService.getUserDetails(token, id);
     }
 }

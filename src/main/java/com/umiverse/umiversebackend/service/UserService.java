@@ -1,5 +1,6 @@
 package com.umiverse.umiversebackend.service;
 
+import com.umiverse.umiversebackend.body.DetailsResponseEntity;
 import com.umiverse.umiversebackend.body.RegisterRequestBody;
 import com.umiverse.umiversebackend.body.ResponseBody;
 import com.umiverse.umiversebackend.model.*;
@@ -199,6 +200,22 @@ public class UserService {
             return ResponseEntity.ok(userRepository.findAllByStatus(Status.ONLINE));
         } else return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                 .body(new ResponseBody("Invalid user token", 9998));
+    }
+
+    public ResponseEntity<Object> getUserDetails(String token, int id) {
+        if(!userRepository.existsBySessionToken(token)){
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(new ResponseBody("Invalid user token", 9998));
+        }
+
+        if(!userRepository.existsByUserID(id)){
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ResponseBody("User not found", 0001));
+        }
+
+        User user = userRepository.findById(id).get();
+        return ResponseEntity.ok().body(
+                new DetailsResponseEntity(user.getUserID(), user.getUsername(), user.getEmail(), user.getFullName(), user.getBio())
+        );
     }
 
     public void checkEmail(String email) throws InvalidEmailException, AlreadyAvailableEmail {
