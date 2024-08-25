@@ -9,11 +9,9 @@ import com.umiverse.umiversebackend.repository.mysql.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.messaging.simp.SimpMessageSendingOperations;
 import org.springframework.stereotype.Service;
 
 import java.sql.Timestamp;
-import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -29,7 +27,7 @@ public class UserService {
     @Autowired
     private EmailService emailService;
     @Autowired
-    private SimpMessageSendingOperations messagingTemplate;
+    private WebSocketService webSocketService;
 
     public ResponseEntity<ResponseBody> register(RegisterRequestBody body){
         try {
@@ -118,26 +116,16 @@ public class UserService {
         return timestamp.before(currentTimestamp);
     }
 
-    public User getUserById(int id) {
-        if (userRepository.existsById(id)){
-            return userRepository.findById(id).get();
-        }
-        return null;
-    }
-
 
     public ResponseEntity<ResponseBody> authenticate(String username, String password) {
         try {
             String hashedPassword = User.hashPassword(password);
             User user = userRepository.findByUsernameAndPassword(username, hashedPassword);
 
-            // TODO: Set up login updates
-//        messagingTemplate.convertAndSend("/topic/users/updates", "User logged in");
-//        if(user != null) messagingTemplate.convertAndSend("/topic/online", new UserStatusMessage(user.getUserID(), true));
-
             if (user != null) {
                 user.generateSessionToken();
                 saveUser(user);
+                webSocketService.sendMessageToTopic("/topic/online", user.getUserID());
                 return ResponseEntity.ok(new ResponseBody("User authenticated successfully", user.getSessionToken()));
             } else {
                 boolean usernameExists = userRepository.existsByUsername(username);
@@ -185,13 +173,12 @@ public class UserService {
 //    }
 
     public void disconnect(String token) {
-//        messagingTemplate.convertAndSend("/topic/users/updates", "User logged out");
         User storedUser = userRepository.findBySessionToken(token);
         if (storedUser != null) {
             storedUser.setStatus(Status.OFFLINE);
             storedUser.clearSessionToken();
             userRepository.save(storedUser);
-//            messagingTemplate.convertAndSend("/topic/online", new UserStatusMessage(storedUser.getUserID(), false));
+            webSocketService.sendMessageToTopic("/topic/online", storedUser.getUserID());
         }
     }
 
