@@ -21,4 +21,6 @@ public interface UserRepository extends JpaRepository<User, Integer> {
     List<User> findAllByStatus(Status status);
 
     User findByUserID(int id);
+
+    User findBySessionToken(String sessionToken);
 }

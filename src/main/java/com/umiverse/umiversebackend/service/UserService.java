@@ -2,7 +2,6 @@ package com.umiverse.umiversebackend.service;
 
 import com.umiverse.umiversebackend.body.RegisterRequestBody;
 import com.umiverse.umiversebackend.body.ResponseBody;
-import com.umiverse.umiversebackend.body.UserStatusMessage;
 import com.umiverse.umiversebackend.model.*;
 import com.umiverse.umiversebackend.repository.mysql.UnverifiedUserRepository;
 import com.umiverse.umiversebackend.repository.mysql.UserRepository;
@@ -10,7 +9,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.simp.SimpMessageSendingOperations;
-import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
 import java.sql.Timestamp;
@@ -126,9 +124,6 @@ public class UserService {
         return null;
     }
 
-    public boolean existsByUsername(String username) {
-        return userRepository.existsByUsername(username);
-    }
 
     public ResponseEntity<ResponseBody> authenticate(String username, String password) {
         try {
@@ -140,10 +135,11 @@ public class UserService {
 //        if(user != null) messagingTemplate.convertAndSend("/topic/online", new UserStatusMessage(user.getUserID(), true));
 
             if (user != null) {
+                user.generateSessionToken();
                 saveUser(user);
-                return ResponseEntity.ok(new ResponseBody("User authenticated successfully", user.getUserID()));
+                return ResponseEntity.ok(new ResponseBody("User authenticated successfully", user.getSessionToken()));
             } else {
-                boolean usernameExists = existsByUsername(username);
+                boolean usernameExists = userRepository.existsByUsername(username);
                 if (usernameExists) {
                     return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                             .body(new ResponseBody("Invalid Password", 2));
@@ -162,7 +158,7 @@ public class UserService {
     public void saveUser(User user) {
         user.setStatus(Status.ONLINE);
         userRepository.save(user);
-        messagingTemplate.convertAndSend("/topic/online", new UserStatusMessage(user.getUserID(), true));
+//        messagingTemplate.convertAndSend("/topic/online", new UserStatusMessage(user.getUserID(), true));
     }
 
     public void saveUnverifiedUser(UnverifiedUser user) {
@@ -187,21 +183,25 @@ public class UserService {
 //        }
 //    }
 
-    public void disconnect(int id) {
+    public void disconnect(String token) {
 //        messagingTemplate.convertAndSend("/topic/users/updates", "User logged out");
-        User storedUser = userRepository.findByUserID(id);
+        User storedUser = userRepository.findBySessionToken(token);
         if (storedUser != null) {
             storedUser.setStatus(Status.OFFLINE);
+            storedUser.clearSessionToken();
             userRepository.save(storedUser);
 //            messagingTemplate.convertAndSend("/topic/online", new UserStatusMessage(storedUser.getUserID(), false));
         }
     }
 
-    public List<User> findConnectedUsers() {
-        return userRepository.findAllByStatus(Status.ONLINE);
+    public ResponseEntity<Object> findConnectedUsers(String token) {
+        if (userRepository.existsBySessionToken(token)) {
+            return ResponseEntity.ok(userRepository.findAllByStatus(Status.ONLINE));
+        } else return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                .body(new ResponseBody("Invalid user token", 9998));
     }
 
-    public boolean checkEmail(String email) throws InvalidEmailException, AlreadyAvailableEmail {
+    public void checkEmail(String email) throws InvalidEmailException, AlreadyAvailableEmail {
         boolean existingUser = userRepository.existsByEmail(email);
         if (existingUser) {
             throw new AlreadyAvailableEmail();
@@ -219,10 +219,9 @@ public class UserService {
 
         if(!isEmailValid) throw new InvalidEmailException();
 
-        return true;
     }
 
-    public boolean checkPassword(String password) throws InvalidPassword {
+    public void checkPassword(String password) throws InvalidPassword {
         boolean containsUpperCase = false;
         boolean containsDigit = false;
         boolean isLengthValid = password.length() >= 8;
@@ -235,11 +234,11 @@ public class UserService {
             }
         }
 
-        if(containsUpperCase && containsDigit && isLengthValid) return true;
+        if(containsUpperCase && containsDigit && isLengthValid) return;
         throw new InvalidPassword();
     }
 
-    public boolean checkUsername(String username) throws InvalidUsername, AlreadyAvailableUsername {
+    public void checkUsername(String username) throws InvalidUsername, AlreadyAvailableUsername {
         boolean existingUser = userRepository.existsByUsername(username);
         System.out.println(existingUser);
         if (existingUser) {
@@ -251,16 +250,14 @@ public class UserService {
 
         if (!isLengthValid && !containsIllegalChars) throw new InvalidUsername();
 
-        return true;
     }
 
-    public boolean checkFullName(String fullName) throws InvalidFullName {
+    public void checkFullName(String fullName) throws InvalidFullName {
         boolean isLengthValid = fullName.length() <= 30;
         boolean containsOnlyLetters = fullName.matches("^[a-zA-Z ]*$");
 
         if (!isLengthValid && containsOnlyLetters) throw new InvalidFullName();
 
-        return true;
     }
 
     public boolean checkBio(String bio) throws InvalidBio {
@@ -269,12 +266,8 @@ public class UserService {
         return true;
     }
 
-    public boolean checkRole(String role) throws InvalidRole {
+    public void checkRole(String role) throws InvalidRole {
         if (!(role.equals("student") || role.equals("professor") || role.equals("admin"))) throw new InvalidRole();
 
-        return true;
     }
 }
-
-
-//curl -X POST http://localhost:8080/api/users/register \ -H "Content-Type: application/json" \ -d '{ "username": "testuser","password": "Eliaskhal0","email": "testuser@edu.umi.ac.ma","fullName": "Test User", "role": "student"}'

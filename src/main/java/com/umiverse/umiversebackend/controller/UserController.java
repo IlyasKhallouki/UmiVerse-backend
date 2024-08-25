@@ -37,14 +37,14 @@ public class UserController {
     }
 
     @PostMapping("/auth/disconnect")
-    public ResponseEntity<String> disconnect(@RequestParam int id) {
-        userService.disconnect(id);
+    public ResponseEntity<String> disconnect(@RequestParam String token) {
+        userService.disconnect(token);
         return ResponseEntity.ok("User Disconnected");
     }
 
     @GetMapping("/online")
-    public ResponseEntity<List<User>> findConnectedUsers() {
-        return ResponseEntity.ok(userService.findConnectedUsers());
+    public ResponseEntity<Object> findConnectedUsers(@RequestParam String token) {
+        return userService.findConnectedUsers(token);
     }
 
     @GetMapping("/details")
