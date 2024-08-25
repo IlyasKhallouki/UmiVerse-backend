@@ -178,22 +178,22 @@ public class UserService {
         unverifiedUserRepository.save(user);
      }
 
-    public void disconnect(User user) {
-        User storedUser = userRepository.findByUserID(user.getUserID());
-        if (storedUser != null) {
-            storedUser.setStatus(Status.OFFLINE);
-            userRepository.save(storedUser);
-            messagingTemplate.convertAndSend("/topic/online", new UserStatusMessage(storedUser.getUserID(), false));
-        }
-    }
+//    public void disconnect(User user) {
+//        User storedUser = userRepository.findByUserID(user.getUserID());
+//        if (storedUser != null) {
+//            storedUser.setStatus(Status.OFFLINE);
+//            userRepository.save(storedUser);
+//            messagingTemplate.convertAndSend("/topic/online", new UserStatusMessage(storedUser.getUserID(), false));
+//        }
+//    }
 
     public void disconnect(int id) {
-        messagingTemplate.convertAndSend("/topic/users/updates", "User logged out");
+//        messagingTemplate.convertAndSend("/topic/users/updates", "User logged out");
         User storedUser = userRepository.findByUserID(id);
         if (storedUser != null) {
             storedUser.setStatus(Status.OFFLINE);
             userRepository.save(storedUser);
-            messagingTemplate.convertAndSend("/topic/online", new UserStatusMessage(storedUser.getUserID(), false));
+//            messagingTemplate.convertAndSend("/topic/online", new UserStatusMessage(storedUser.getUserID(), false));
         }
     }
 
