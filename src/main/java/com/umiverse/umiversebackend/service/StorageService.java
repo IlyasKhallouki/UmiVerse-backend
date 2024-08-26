@@ -107,12 +107,12 @@ public class StorageService {
     private byte[] requestAvatar(String id) {
         try {
             String downloadUrl = UriComponentsBuilder.fromHttpUrl(storageServiceUrl)
-                    .path("/avatar/" + id)
+                    .path("/image/" + id)
                     .toUriString();
 
             ResponseEntity<byte[]> response = restTemplate.exchange(downloadUrl, HttpMethod.GET, null, byte[].class);
 
-            if (response.getStatusCode() == HttpStatus.OK) {
+            if (response.getStatusCode() == HttpStatus.OK) {typo
                 return response.getBody();
             } else {
                 throw new RuntimeException("Failed to retrieve avatar: " + response.getStatusCode());

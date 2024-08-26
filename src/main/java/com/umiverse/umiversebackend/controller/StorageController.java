@@ -3,7 +3,6 @@ package com.umiverse.umiversebackend.controller;
 import com.umiverse.umiversebackend.body.ResponseBody;
 import com.umiverse.umiversebackend.body.StorageRequestBody;
 import com.umiverse.umiversebackend.service.StorageService;
-import com.umiverse.umiversebackend.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
@@ -25,7 +24,7 @@ public class StorageController {
         return storageService.getAvatar(token);
     }
 
-    @GetMapping("/avatar/get")
+    @GetMapping("/avatar/get-user")
     ResponseEntity<Object> getAvatar(@RequestParam String token, @RequestParam String username) {
         return storageService.getAvatar(token, username);
     }
