@@ -49,6 +49,9 @@ public class User {
     @Column(name = "token_expiration", nullable = true)
     private Timestamp tokenExpiration;
 
+    @Column(name = "avatar_id")
+    private String avatarId;
+
     public User() {}
 
     public User(String username, String password, String email, String fullName, String role) {

@@ -187,6 +187,7 @@ public class UserService {
             User user = userRepository.findBySessionToken(token);
             user.setStatus(Status.ONLINE);
             userRepository.save(user);
+            webSocketService.sendMessageToTopic("/topic/online", user.getUserID());
             return ResponseEntity.ok("User status set to online");
         } else return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                 .body("Invalid user token");
@@ -197,6 +198,7 @@ public class UserService {
             User user = userRepository.findBySessionToken(token);
             user.setStatus(Status.OFFLINE);
             userRepository.save(user);
+            webSocketService.sendMessageToTopic("/topic/online", user.getUserID());
             return ResponseEntity.ok("User status set to online");
         } else return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                 .body("Invalid user token");
