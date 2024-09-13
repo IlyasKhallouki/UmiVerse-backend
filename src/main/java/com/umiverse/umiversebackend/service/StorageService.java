@@ -112,7 +112,7 @@ public class StorageService {
 
             ResponseEntity<byte[]> response = restTemplate.exchange(downloadUrl, HttpMethod.GET, null, byte[].class);
 
-            if (response.getStatusCode() == HttpStatus.OK) {typo
+            if (response.getStatusCode() == HttpStatus.OK) {
                 return response.getBody();
             } else {
                 throw new RuntimeException("Failed to retrieve avatar: " + response.getStatusCode());
